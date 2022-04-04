@@ -48,11 +48,13 @@ async function uniqueUrlCode(urlCode) {
     const checkRes = await urlSchema.findOne({
         urlCode: urlCode
     });
-    if (!checkRes) {
-        const urlCode = crypto.randomBytes(4).toString('hex');
+    if (checkRes != null) {
+        const urlCode = crypto.randomBytes(4).toString('base64');
         uniqueUrlCode(urlCode);
     }
-    return urlCode;
+    else {
+        return urlCode;
+    }
 }
 
 const redirectToOriginalURL = async (req, res) => {
