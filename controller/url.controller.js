@@ -16,6 +16,7 @@ const createShortURL = async (req, res) => {
         let urlCode = crypto.randomBytes(4).toString('base64');
 
         urlCode = await uniqueUrlCode(urlCode);
+        urlCode = urlCode.toLowerCase();
 
         const domain = req.protocol + "://" + req.get('host');
         const shortUrl = domain + "/" + urlCode;
