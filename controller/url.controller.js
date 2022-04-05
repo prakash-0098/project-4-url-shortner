@@ -13,23 +13,33 @@ const createShortURL = async (req, res) => {
                 });
             }
         }
-        let urlCode = crypto.randomBytes(4).toString('base64');
+        const fetchRes = await urlSchema.findOne(data);
+        if (fetchRes) {
+            return res.status(201).send({
+                status: true,
+                message: 'success',
+                data: fetchRes
+            });
+        }
+        else {
+            let urlCode = crypto.randomBytes(4).toString('base64');
 
-        urlCode = await uniqueUrlCode(urlCode);
-        urlCode = urlCode.toLowerCase();
+            urlCode = await uniqueUrlCode(urlCode);
+            urlCode = urlCode.toLowerCase();
 
-        const domain = req.protocol + "://" + req.get('host');
-        const shortUrl = domain + "/" + urlCode;
+            const domain = req.protocol + "://" + req.get('host');
+            const shortUrl = domain + "/" + urlCode;
 
-        data.urlCode = urlCode;
-        data.shortUrl = shortUrl;
+            data.urlCode = urlCode;
+            data.shortUrl = shortUrl;
 
-        const dataRes = await urlSchema.create(data);
-        return res.status(201).send({
-            status: true,
-            message: 'success',
-            data: dataRes
-        })
+            const dataRes = await urlSchema.create(data);
+            return res.status(201).send({
+                status: true,
+                message: 'success',
+                data: dataRes
+            });
+        }
     } catch (error) {
         if (error['errors'] != null) {
             const key = Object.keys(error['errors']);
