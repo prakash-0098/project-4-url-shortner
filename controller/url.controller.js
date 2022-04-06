@@ -1,5 +1,6 @@
 const urlSchema = require('../model/url.model');
 const crypto = require('crypto');
+const redisService = require('../services/radis.service');
 
 const createShortURL = async (req, res) => {
     try {
@@ -13,32 +14,49 @@ const createShortURL = async (req, res) => {
                 });
             }
         }
-        const fetchRes = await urlSchema.findOne(data);
-        if (fetchRes) {
+        const getRedisRes = await redisService.GET_ASYNC(data.longUrl);
+        if (getRedisRes) {
+            console.log("Redis work...")
             return res.status(201).send({
                 status: true,
-                message: 'success',
-                data: fetchRes
+                message: 'success form Redis',
+                data: JSON.parse(getRedisRes)
             });
         }
         else {
-            let urlCode = crypto.randomBytes(4).toString('base64');
+            const fetchRes = await urlSchema.findOne(data);
+            if (fetchRes) {
+                console.log('MonogDb find work...')
+                return res.status(201).send({
+                    status: true,
+                    message: 'success',
+                    data: fetchRes
+                });
+            }
+            else {
+                let urlCode = crypto.randomBytes(4).toString('base64');
 
-            urlCode = await uniqueUrlCode(urlCode);
-            urlCode = urlCode.toLowerCase();
+                urlCode = await uniqueUrlCode(urlCode);
+                urlCode = urlCode.toLowerCase();
 
-            const domain = req.protocol + "://" + req.get('host');
-            const shortUrl = domain + "/" + urlCode;
+                const domain = req.protocol + "://" + req.get('host');
+                const shortUrl = domain + "/" + urlCode;
 
-            data.urlCode = urlCode;
-            data.shortUrl = shortUrl;
+                data.urlCode = urlCode;
+                data.shortUrl = shortUrl;
 
-            const dataRes = await urlSchema.create(data);
-            return res.status(201).send({
-                status: true,
-                message: 'success',
-                data: dataRes
-            });
+                const dataRes = await urlSchema.create(data);
+                await redisService.MSET_ASYNC(
+                    dataRes.longUrl, JSON.stringify(dataRes),
+                    dataRes.urlCode, dataRes.longUrl
+                );
+                console.log('MonogDb work...')
+                return res.status(201).send({
+                    status: true,
+                    message: 'success',
+                    data: dataRes
+                });
+            }
         }
     } catch (error) {
         if (error['errors'] != null) {
@@ -77,6 +95,12 @@ const redirectToOriginalURL = async (req, res) => {
                 message: 'Please enter a valid urlCode !'
             });
         }
+        const getRedisRes = await redisService.GET_ASYNC(urlCode);
+        if (getRedisRes) {
+            console.log("redis work...")
+            res.redirect(301, getRedisRes);
+            return false;
+        }
         const urlRes = await urlSchema.findOne({
             urlCode: urlCode
         });
@@ -86,7 +110,9 @@ const redirectToOriginalURL = async (req, res) => {
                 message: 'URL not found !'
             });
         }
+        console.log("mongoDb work...")
         res.redirect(301, urlRes.longUrl);
+
     } catch (error) {
         return res.status(500).send({
             status: false,
