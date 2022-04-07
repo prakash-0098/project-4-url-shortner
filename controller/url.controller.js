@@ -44,10 +44,12 @@ const createShortURL = async (req, res) => {
                 data.shortUrl = shortUrl;
 
                 const dataRes = await urlSchema.create(data);
-                await redisService.MSET_ASYNC(
-                    dataRes.longUrl, JSON.stringify(dataRes),
-                    dataRes.urlCode, dataRes.longUrl
-                );
+                await redisService.SET_ASYNC(dataRes.longUrl, JSON.stringify(dataRes), 'EX', 60 * 60 * 24);
+                await redisService.SET_ASYNC(dataRes.urlCode, dataRes.longUrl, 'EX', 60 * 60 * 24);
+                // await redisService.MSET_ASYNC(
+                //     dataRes.longUrl, JSON.stringify(dataRes),
+                //     dataRes.urlCode, dataRes.longUrl
+                // );
                 return res.status(201).send({
                     status: true,
                     message: 'success [MongoDB]',
