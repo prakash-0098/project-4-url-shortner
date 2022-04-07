@@ -16,20 +16,18 @@ const createShortURL = async (req, res) => {
         }
         const getRedisRes = await redisService.GET_ASYNC(data.longUrl);
         if (getRedisRes) {
-            console.log("Redis work...")
             return res.status(201).send({
                 status: true,
-                message: 'success form Redis',
+                message: 'success [Redis]',
                 data: JSON.parse(getRedisRes)
             });
         }
         else {
             const fetchRes = await urlSchema.findOne(data);
             if (fetchRes) {
-                console.log('MonogDb find work...')
                 return res.status(201).send({
                     status: true,
-                    message: 'success',
+                    message: 'success [MongoDB]',
                     data: fetchRes
                 });
             }
@@ -50,10 +48,9 @@ const createShortURL = async (req, res) => {
                     dataRes.longUrl, JSON.stringify(dataRes),
                     dataRes.urlCode, dataRes.longUrl
                 );
-                console.log('MonogDb work...')
                 return res.status(201).send({
                     status: true,
-                    message: 'success',
+                    message: 'success [MongoDB]',
                     data: dataRes
                 });
             }
@@ -97,7 +94,7 @@ const redirectToOriginalURL = async (req, res) => {
         }
         const getRedisRes = await redisService.GET_ASYNC(urlCode);
         if (getRedisRes) {
-            console.log("redis work...")
+            console.log("redis work...");
             res.redirect(301, getRedisRes);
             return false;
         }
@@ -110,7 +107,7 @@ const redirectToOriginalURL = async (req, res) => {
                 message: 'URL not found !'
             });
         }
-        console.log("mongoDb work...")
+        console.log("mongoDb work...");
         res.redirect(301, urlRes.longUrl);
 
     } catch (error) {
