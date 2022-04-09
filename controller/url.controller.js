@@ -25,6 +25,7 @@ const createShortURL = async (req, res) => {
         else {
             const fetchRes = await urlSchema.findOne(data);
             if (fetchRes) {
+                await redisService.SET_ASYNC(fetchRes.longUrl, JSON.stringify(fetchRes), 'EX', 60 * 60 * 24)
                 return res.status(201).send({
                     status: true,
                     message: 'success [MongoDB]',
@@ -44,7 +45,7 @@ const createShortURL = async (req, res) => {
                 data.shortUrl = shortUrl;
 
                 const dataRes = await urlSchema.create(data);
-                await redisService.SET_ASYNC(dataRes.longUrl, JSON.stringify(dataRes), 'EX', 60);
+                await redisService.SET_ASYNC(dataRes.longUrl, JSON.stringify(dataRes), 'EX', 60 * 60 * 24);
                 return res.status(201).send({
                     status: true,
                     message: 'success [MongoDB]',
@@ -105,7 +106,7 @@ const redirectToOriginalURL = async (req, res) => {
             });
         }
         console.log("mongoDb work...");
-        await redisService.SET_ASYNC(urlRes.urlCode, urlRes.longUrl, 'EX', 60);
+        await redisService.SET_ASYNC(urlRes.urlCode, urlRes.longUrl, 'EX', 60 * 60 * 24);
         res.redirect(301, urlRes.longUrl);
 
     } catch (error) {
