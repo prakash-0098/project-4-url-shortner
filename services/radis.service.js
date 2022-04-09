@@ -22,10 +22,8 @@ redisClient.on('connect', async () => {
 
 const SET_ASYNC = promisify(redisClient.SET).bind(redisClient);
 const GET_ASYNC = promisify(redisClient.GET).bind(redisClient);
-const MSET_ASYNC = promisify(redisClient.MSET).bind(redisClient);
 
 module.exports = {
     SET_ASYNC,
-    GET_ASYNC,
-    MSET_ASYNC
+    GET_ASYNC
 }
